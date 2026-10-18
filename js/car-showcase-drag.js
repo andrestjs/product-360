@@ -107,8 +107,10 @@
       if (!dragging) return;
       event.preventDefault();
 
+      // Dirección invertida a propósito: arrastrar a la IZQUIERDA avanza
+      // el video (como jalando la cinta) y a la DERECHA retrocede
       const deltaX = event.clientX - pointerStartX;
-      targetProgress = clamp(progressStart + deltaX / DRAG_DISTANCE(), 0, 1);
+      targetProgress = clamp(progressStart - deltaX / DRAG_DISTANCE(), 0, 1);
       requestRender();
     }
 

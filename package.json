@@ -8,6 +8,7 @@
     "watch": "sass --watch src/scss/main.scss css/main.css --style=expanded"
   },
   "devDependencies": {
+    "puppeteer-core": "^25.14.0",
     "sass": "^1.80.0"
   },
   "dependencies": {
