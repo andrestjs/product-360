@@ -1,0 +1,5 @@
+node_modules/
+
+# Instaladores y binarios descargados (no forman parte del proyecto)
+*.exe
+herramientas/optimizar-video/ffmpeg/

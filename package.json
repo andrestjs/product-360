@@ -1,0 +1,16 @@
+{
+  "name": "car-showcase",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sección interactiva de presentación de automóvil con GSAP ScrollTrigger",
+  "scripts": {
+    "build": "sass src/scss/main.scss css/main.css --style=compressed --no-source-map",
+    "watch": "sass --watch src/scss/main.scss css/main.css --style=expanded"
+  },
+  "devDependencies": {
+    "sass": "^1.80.0"
+  },
+  "dependencies": {
+    "gsap": "^3.12.5"
+  }
+}

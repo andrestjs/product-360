@@ -1,0 +1,56 @@
+OPTIMIZADOR DE VIDEO PARA EL SITIO WEB DEL AUTOMOVIL
+=====================================================
+
+Para que el video se deslice de forma fluida con el mouse o el
+scroll, el archivo necesita una compresion especial (keyframes en
+cada fotograma) y calidad HD. Este script la aplica automaticamente.
+
+
+COMO USARLO (un solo paso)
+--------------------------
+1. Toma el video original que llego de la grabacion.
+2. Arrastralo con el mouse y sueltalo sobre el archivo DUAL de tu
+   sistema (recomendado, genera las dos resoluciones de golpe):
+
+   WINDOWS:  "optimizar-video-dual.bat"
+   MAC:      "optimizar-video-dual.command"
+
+   junto al original apareceran DOS archivos:
+      nombre-1080p.mp4   -> para escritorio (nitidez)
+      nombre-720p.mp4    -> para movil (ligero)
+
+3. Espera a que la ventana muestre el progreso (codifica las dos
+   versiones en una sola pasada).
+4. Cuando diga "Listo", ya estan los dos archivos.
+5. Sube SIEMPRE los archivos generados al sitio web, nunca el
+   original (el original se veria entrecortado al desplazarse).
+
+Puedes arrastrar varios videos a la vez; se procesan en orden.
+
+Versiones simples (solo una resolucion):
+   WINDOWS:  "optimizar-video-1080p.bat" / "optimizar-video-720p.bat"
+   MAC:      "optimizar-video.command" (solo HD)
+
+
+NOTAS PARA MAC
+--------------
+- Primera vez: haz CLIC DERECHO sobre el archivo .command y
+  elige "Abrir" > "Abrir" (macOS avisa con Gatekeeper porque el
+  archivo viene de internet; despues ya se abre con doble clic).
+- La primera ejecucion descarga ffmpeg portatil automaticamente
+  (una sola vez, ~75 MB) junto a estos archivos.
+- Si la terminal dice "permission denied", ejecuta en Terminal:
+      chmod +x optimizar-video-dual.command
+
+
+NOTAS GENERALES
+---------------
+- La primera vez en Windows, se descarga ffmpeg automaticamente
+  (una sola vez, ~90 MB). Despues ya no necesita internet.
+- Puedes copiar esta carpeta completa a cualquier equipo
+  (Windows o Mac) y funcionara sin instalar nada mas.
+- El "-1080p" conserva la resolucion del original (si el origen
+  es 720p no lo amplia); el "-720p" siempre baja a 1280 px.
+- Antes de subir el archivo al sitio, si lo reemplazas por una
+  version anterior, recarga la pagina con Ctrl+F5 (Windows) o
+  Cmd+Shift+R (Mac) para ver los cambios.

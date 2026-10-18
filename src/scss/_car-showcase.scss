@@ -1,0 +1,324 @@
+// ============================================================
+// Sección .car-showcase — presentación cinematográfica
+// ============================================================
+
+$car-showcase-z-video: 1;
+$car-showcase-z-overlay: 2;
+$car-showcase-z-content: 3;
+
+$car-showcase-font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+$car-showcase-color-text: #f5f5f2;
+
+// --- Página contenedora de varias secciones (v2 multi-bloque) ---
+.showcase-page {
+  display: flex;
+  flex-direction: column;
+  gap: 5rem; // espaciado entre bloques
+  min-height: 100vh;
+  background: #0a0a0a;
+  // Las secciones usan 100vw; se evita el desbordamiento horizontal
+  // causado por el ancho del scrollbar vertical
+  overflow-x: hidden;
+}
+
+.car-showcase {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  min-height: 800px;
+  overflow: hidden;
+  background: #0a0a0a;
+  color: $car-showcase-color-text;
+  font-family: $car-showcase-font;
+
+  // --- Media: video + capa superpuesta ---
+  &__media {
+    position: absolute;
+    inset: 0;
+    z-index: $car-showcase-z-video;
+  }
+
+  &__video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  // Degradado oscuro sutil: legibilidad sin ocultar el vehículo
+  &__overlay {
+    position: absolute;
+    inset: 0;
+    z-index: $car-showcase-z-overlay;
+    background:
+      linear-gradient(
+        to bottom,
+        rgba(10, 10, 10, 0.35) 0%,
+        rgba(10, 10, 10, 0.15) 40%,
+        rgba(10, 10, 10, 0.55) 100%
+      );
+    pointer-events: none;
+  }
+
+  // --- Contenido superpuesto ---
+  &__content {
+    position: absolute;
+    inset: 0;
+    z-index: $car-showcase-z-content;
+    pointer-events: none;
+  }
+
+  // Los tres momentos ocupan la misma área; GSAP controla su visibilidad
+  &__block {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 0 1.5rem;
+    text-align: center;
+    opacity: 0;
+    visibility: hidden;
+
+    &--intro {
+      gap: 1.25rem;
+    }
+
+    &--description {
+      max-width: none;
+    }
+
+    &--outro {
+      gap: 2rem;
+    }
+  }
+
+  &__brand {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.45em;
+    text-transform: uppercase;
+    color: rgba(245, 245, 242, 0.7);
+  }
+
+  &__model {
+    margin: 0;
+    font-size: clamp(3rem, 9vw, 7.5rem);
+    font-weight: 200;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1.05;
+  }
+
+  &__line {
+    display: block;
+    width: 4.5rem;
+    height: 1px;
+    background: rgba(245, 245, 242, 0.6);
+  }
+
+  &__text {
+    max-width: 34rem; // ancho de lectura controlado
+    margin: 0;
+    font-size: clamp(1rem, 1.6vw, 1.25rem);
+    font-weight: 300;
+    line-height: 1.75;
+    letter-spacing: 0.02em;
+    color: rgba(245, 245, 242, 0.9);
+  }
+
+  &__claim {
+    max-width: 36rem;
+    margin: 0;
+    font-size: clamp(1.5rem, 3.2vw, 2.75rem);
+    font-weight: 200;
+    line-height: 1.3;
+    letter-spacing: 0.04em;
+  }
+
+  &__cta {
+    pointer-events: auto;
+    display: inline-block;
+    padding: 0.9rem 2.5rem;
+    border: 1px solid rgba(245, 245, 242, 0.5);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: $car-showcase-color-text;
+    transition: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease;
+
+    &:hover,
+    &:focus-visible {
+      background: $car-showcase-color-text;
+      border-color: $car-showcase-color-text;
+      color: #0a0a0a;
+    }
+  }
+
+  // --- Variante v2: control por arrastre del mouse / dedo ---
+  &--drag {
+    cursor: grab;
+    // pan-y permite scroll vertical táctil; el gesto horizontal lo maneja el JS
+    touch-action: pan-y;
+    user-select: none;
+
+    &.is-dragging {
+      cursor: grabbing;
+    }
+
+    // La v2 no usa bloques de texto; se ocultan si existieran en el marcado
+    .car-showcase__content {
+      display: none;
+    }
+  }
+
+  // Instrucción accesible: presente en el DOM, oculta visualmente
+  &__hint {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  // --- Invitación al arrastre (v2): icono + etiqueta ---
+  &__drag-hint {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: $car-showcase-z-content;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1.6rem;
+    border: 1px solid rgba(245, 245, 242, 0.3);
+    border-radius: 999px;
+    background: rgba(10, 10, 10, 0.4);
+    backdrop-filter: blur(8px);
+    color: rgba(245, 245, 242, 0.95);
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    animation: drag-hint-fade 2.6s ease-in-out infinite;
+
+    // Tras la primera interacción se atenúa y desaparece
+    &--hidden {
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.6s ease, visibility 0s linear 0.6s;
+      animation: none;
+    }
+  }
+
+  &__drag-icon {
+    flex-shrink: 0;
+    animation: drag-hint-nudge 2.6s ease-in-out infinite;
+  }
+
+  &__drag-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.15em; // tracking sutil, habitual en tipografía japonesa
+    white-space: nowrap;
+    // Fuentes japonesas por sistema; Noto Sans JP si está instalada
+    font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic',
+      'Meiryo', 'Noto Sans JP', sans-serif;
+  }
+
+  // --- Alternativa sin JS / movimiento reducido ---
+  // Se muestra el primer momento estático; el video permanece en pausa.
+  &--static {
+    .car-showcase__block--intro {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+}
+
+// --- Responsive ---
+@media (max-width: 768px) {
+  .car-showcase {
+    min-height: 100vh;
+
+    &__block {
+      gap: 1rem;
+      padding: 0 1.25rem;
+      justify-content: flex-end;
+      padding-bottom: 18vh;
+    }
+
+    &__model {
+      font-size: clamp(2.5rem, 12vw, 4rem);
+    }
+
+    &__text {
+      font-size: 0.9375rem;
+      line-height: 1.65;
+    }
+
+    &__claim {
+      font-size: clamp(1.375rem, 6vw, 1.75rem);
+    }
+
+    &__cta {
+      padding: 0.75rem 2rem;
+    }
+
+    &__drag-hint {
+      gap: 0.6rem;
+      padding: 0.75rem 1.25rem;
+    }
+
+    &__drag-label {
+      letter-spacing: 0.1em;
+    }
+  }
+}
+
+// --- Preferencia de movimiento reducido ---
+@media (prefers-reduced-motion: reduce) {
+  .car-showcase {
+    &__block {
+      transition: none;
+    }
+
+    &__cta {
+      transition: none;
+    }
+
+    &__drag-hint,
+    &__drag-icon {
+      animation: none;
+    }
+  }
+}
+
+// --- Animaciones del icono de arrastre ---
+@keyframes drag-hint-fade {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes drag-hint-nudge {
+  0%,
+  100% {
+    transform: translateX(-5px);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+}

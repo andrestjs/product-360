@@ -1,0 +1,24 @@
+// ============================================================
+// Presentación de automóvil — estilos globales
+// ============================================================
+
+@use 'car-showcase';
+
+// --- Utilidades de página (solo contexto de scroll de ejemplo) ---
+.intro,
+.outro {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  background: #0a0a0a;
+}
+
+.intro__text,
+.outro__text {
+  margin: 0;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 0.8125rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}

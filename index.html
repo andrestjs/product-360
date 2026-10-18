@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Presentación — Automóvil</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+  <!-- Contenido de ejemplo anterior a la sección (para tener contexto de scroll) -->
+  <header class="intro">
+    <p class="intro__text">Desliza para descubrir</p>
+  </header>
+
+  <!-- Sección: presentación cinematográfica del automóvil -->
+  <section class="car-showcase" aria-label="Presentación del automóvil">
+    <div class="car-showcase__media">
+      <video
+        class="car-showcase__video"
+        src="video/car.mp4"
+        muted
+        playsinline
+        preload="auto"
+        tabindex="-1"
+        aria-hidden="true"
+      ></video>
+      <div class="car-showcase__overlay" aria-hidden="true"></div>
+    </div>
+
+    <div class="car-showcase__content">
+
+      <!-- Primer momento: presentación del modelo -->
+      <div class="car-showcase__block car-showcase__block--intro">
+        <p class="car-showcase__brand">Fabricante</p>
+        <h2 class="car-showcase__model">Modelo&nbsp;X</h2>
+        <span class="car-showcase__line" aria-hidden="true"></span>
+      </div>
+
+      <!-- Segundo momento: descripción del vehículo -->
+      <div class="car-showcase__block car-showcase__block--description">
+        <p class="car-showcase__text">
+          Ingeniería y emoción en cada detalle. Una silueta esculpida por el aire,
+          un habitáculo envolvente y una respuesta instantánea que convierte cada
+          trayecto en una experiencia.
+        </p>
+      </div>
+
+      <!-- Tercer momento: cierre de la presentación -->
+      <div class="car-showcase__block car-showcase__block--outro">
+        <p class="car-showcase__claim">Diseñado para sentir. Creado para durar.</p>
+        <a class="car-showcase__cta" href="#explorar">Explorar el modelo</a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Contenido de ejemplo posterior para permitir salir de la sección fijada -->
+  <footer class="outro">
+    <p class="outro__text">Continúa explorando</p>
+  </footer>
+
+  <script src="js/vendor/gsap.min.js"></script>
+  <script src="js/vendor/ScrollTrigger.min.js"></script>
+  <script src="js/car-showcase.js"></script>
+</body>
+</html>
