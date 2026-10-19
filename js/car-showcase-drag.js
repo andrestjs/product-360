@@ -12,10 +12,97 @@
 
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Píxeles de arrastre necesarios para recorrer todo el video
-  const DRAG_DISTANCE = () => window.innerWidth * 1.2;
+  // Distancia base de arrastre; se multiplica según el movimiento detectado
+  const BASE_DRAG_DISTANCE = () => window.innerWidth * 1.2;
   // Amortiguación del seguimiento (más bajo = más suave, más alto = más directo)
   const SMOOTHING = 0.12;
+
+  // --- Detección automática de movimiento del video ---
+  // Muestrea N fotogramas en un canvas diminuto y mide la diferencia
+  // media entre pares consecutivos. Un plano casi estático da un score
+  // bajo (~0-2); cámara en movimiento, alto (~5+). El score escala la
+  // distancia de arrastre para que la velocidad percibida se nivele
+  // entre videos distintos sin configuración manual.
+  const SAMPLE_COUNT = 6;
+  const SAMPLE_WIDTH = 64;
+  const SAMPLE_HEIGHT = 36;
+  // Multiplicador = score / MOTION_REF. Calibrado empíricamente: un plano
+  // estable tipo "video del auto" da ~20 (≈1x) y cámara en movimiento
+  // tipo "prueba" ~38 (≈2x), nivelando la sensación de velocidad.
+  const MOTION_REF = 19;
+  const MOTION_DRAG_MIN = 0.9;
+  const MOTION_DRAG_MAX = 3;
+
+  function estimateMotionScore(video, shouldAbort) {
+    return new Promise(function (resolve) {
+      if (!video.duration || !isFinite(video.duration)) {
+        resolve(null);
+        return;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = SAMPLE_WIDTH;
+      canvas.height = SAMPLE_HEIGHT;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      if (!ctx) {
+        resolve(null);
+        return;
+      }
+
+      const timestamps = [];
+      for (let i = 0; i < SAMPLE_COUNT; i++) {
+        timestamps.push(video.duration * ((i + 0.5) / SAMPLE_COUNT));
+      }
+
+      let prevData = null;
+      let totalDiff = 0;
+      let pairs = 0;
+      let idx = 0;
+      let settled = false;
+
+      function finish(score) {
+        if (settled) return;
+        settled = true;
+        video.removeEventListener('seeked', onSeeked);
+        resolve(score);
+      }
+
+      function onSeeked() {
+        // El usuario empezó a arrastrar: se aborta y se respeta su interacción
+        if (shouldAbort()) {
+          finish(null);
+          return;
+        }
+        try {
+          ctx.drawImage(video, 0, 0, SAMPLE_WIDTH, SAMPLE_HEIGHT);
+          const data = ctx.getImageData(0, 0, SAMPLE_WIDTH, SAMPLE_HEIGHT).data;
+          if (prevData) {
+            let sum = 0;
+            for (let p = 0; p < data.length; p += 4) {
+              sum += Math.abs(data[p] - prevData[p]);
+              sum += Math.abs(data[p + 1] - prevData[p + 1]);
+              sum += Math.abs(data[p + 2] - prevData[p + 2]);
+            }
+            totalDiff += sum / (SAMPLE_WIDTH * SAMPLE_HEIGHT * 3);
+            pairs++;
+          }
+          prevData = data;
+        } catch (e) {
+          // Canvas protegido (vídeo cross-origin) u otro error: sin ajuste
+          finish(null);
+          return;
+        }
+        idx++;
+        if (idx >= timestamps.length) {
+          finish(pairs > 0 ? totalDiff / pairs : null);
+          return;
+        }
+        video.currentTime = timestamps[idx];
+      }
+
+      video.addEventListener('seeked', onSeeked);
+      video.currentTime = timestamps[0];
+    });
+  }
 
   function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
@@ -40,6 +127,12 @@
     let currentProgress = 0; // progreso mostrado (suavizado)
     let pendingTarget = null; // seek objetivo pendiente mientras el navegador trabaja
     let rafId = null;
+    let dragMultiplier = 1; // se ajusta tras detectar el movimiento del video
+
+    // Distancia de arrastre efectiva de esta instancia
+    function dragDistance() {
+      return BASE_DRAG_DISTANCE() * dragMultiplier;
+    }
 
     // Escribe la posición temporal del video (protección de seeks en curso)
     function setVideoProgress(progress) {
@@ -110,7 +203,7 @@
       // Dirección invertida a propósito: arrastrar a la IZQUIERDA avanza
       // el video (como jalando la cinta) y a la DERECHA retrocede
       const deltaX = event.clientX - pointerStartX;
-      targetProgress = clamp(progressStart - deltaX / DRAG_DISTANCE(), 0, 1);
+      targetProgress = clamp(progressStart - deltaX / dragDistance(), 0, 1);
       requestRender();
     }
 
@@ -133,11 +226,31 @@
       event.preventDefault();
     });
 
+    // Tras los metadatos se mide el movimiento del video y se ajusta la
+    // distancia de arrastre; se descarta si el usuario ya está arrastrando
+    function calibrateDragDistance() {
+      setTimeout(function () {
+        if (dragging) return;
+        estimateMotionScore(video, function () {
+          return dragging;
+        }).then(function (score) {
+          // La posición vuelve al punto donde estaba el usuario
+          setVideoProgress(currentProgress);
+          if (score === null || dragging) return;
+          dragMultiplier = clamp(score / MOTION_REF, MOTION_DRAG_MIN, MOTION_DRAG_MAX);
+          // Visible para depuración / inspección
+          section.dataset.motionScore = score.toFixed(2);
+          section.dataset.dragMultiplier = dragMultiplier.toFixed(2);
+        });
+      }, 250);
+    }
+
     // --- Carga de metadatos ---
     function init() {
       if (video.readyState >= 1) {
         metadataReady = true;
         setVideoProgress(0);
+        calibrateDragDistance();
         return;
       }
 
@@ -146,6 +259,7 @@
         video.removeEventListener('loadedmetadata', onMetadata);
         video.removeEventListener('error', onError);
         setVideoProgress(0);
+        calibrateDragDistance();
       };
 
       const onError = function () {
