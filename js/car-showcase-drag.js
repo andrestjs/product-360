@@ -137,7 +137,11 @@
     // Escribe la posición temporal del video (protección de seeks en curso)
     function setVideoProgress(progress) {
       if (!metadataReady || !video.duration) return;
-      const target = progress * (video.duration - 0.05);
+      // Envoltorio circular: al pasar del final el video se reinicia
+      // (y al pasar antes del inicio, va al final) — el arrastre sigue
+      // respondiendo en la misma dirección
+      const wrapped = ((progress % 1) + 1) % 1;
+      const target = wrapped * (video.duration - 0.05);
 
       if (video.seeking) {
         pendingTarget = target;
@@ -201,9 +205,12 @@
       event.preventDefault();
 
       // Dirección invertida a propósito: arrastrar a la IZQUIERDA avanza
-      // el video (como jalando la cinta) y a la DERECHA retrocede
+      // el video (como jalando la cinta) y a la DERECHA retrocede.
+      // El progreso no se limita a [0,1]: es continuo y el envoltorio
+      // ocurre al convertirlo a currentTime, de modo que al agotar el
+      // video este se reinicia y el arrastre sigue de forma natural
       const deltaX = event.clientX - pointerStartX;
-      targetProgress = clamp(progressStart - deltaX / dragDistance(), 0, 1);
+      targetProgress = progressStart - deltaX / dragDistance();
       requestRender();
     }
 
