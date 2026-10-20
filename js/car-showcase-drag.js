@@ -35,7 +35,7 @@
 
   function estimateMotionScore(video, shouldAbort) {
     return new Promise(function (resolve) {
-      if (!video.duration || !isFinite(video.duration)) {
+      if (!video.currentSrc || !video.duration || !isFinite(video.duration)) {
         resolve(null);
         return;
       }
@@ -48,6 +48,14 @@
         return;
       }
 
+      // Video auxiliar oculto con el mismo archivo: el muestreo NO toca
+      // la imagen visible (evita los parpadeos tipo "rebobinado" al cargar)
+      const sampler = document.createElement('video');
+      sampler.muted = true;
+      sampler.playsInline = true;
+      sampler.preload = 'auto';
+      sampler.src = video.currentSrc;
+
       const timestamps = [];
       for (let i = 0; i < SAMPLE_COUNT; i++) {
         timestamps.push(video.duration * ((i + 0.5) / SAMPLE_COUNT));
@@ -58,12 +66,27 @@
       let pairs = 0;
       let idx = 0;
       let settled = false;
+      let watchdog = null;
 
       function finish(score) {
         if (settled) return;
         settled = true;
-        video.removeEventListener('seeked', onSeeked);
+        clearTimeout(watchdog);
+        sampler.removeEventListener('loadedmetadata', onReady);
+        sampler.removeEventListener('seeked', onSeeked);
+        sampler.removeEventListener('error', onError);
+        // Libera el búfer del video auxiliar
+        sampler.removeAttribute('src');
+        sampler.load();
         resolve(score);
+      }
+
+      function onError() {
+        finish(null);
+      }
+
+      function onReady() {
+        sampler.currentTime = timestamps[0];
       }
 
       function onSeeked() {
@@ -73,7 +96,7 @@
           return;
         }
         try {
-          ctx.drawImage(video, 0, 0, SAMPLE_WIDTH, SAMPLE_HEIGHT);
+          ctx.drawImage(sampler, 0, 0, SAMPLE_WIDTH, SAMPLE_HEIGHT);
           const data = ctx.getImageData(0, 0, SAMPLE_WIDTH, SAMPLE_HEIGHT).data;
           if (prevData) {
             let sum = 0;
@@ -96,11 +119,16 @@
           finish(pairs > 0 ? totalDiff / pairs : null);
           return;
         }
-        video.currentTime = timestamps[idx];
+        sampler.currentTime = timestamps[idx];
       }
 
-      video.addEventListener('seeked', onSeeked);
-      video.currentTime = timestamps[0];
+      sampler.addEventListener('loadedmetadata', onReady);
+      sampler.addEventListener('seeked', onSeeked);
+      sampler.addEventListener('error', onError);
+      // Por si algún seek nunca completa (conexión lenta)
+      watchdog = setTimeout(function () {
+        finish(null);
+      }, 10000);
     });
   }
 
@@ -241,8 +269,6 @@
         estimateMotionScore(video, function () {
           return dragging;
         }).then(function (score) {
-          // La posición vuelve al punto donde estaba el usuario
-          setVideoProgress(currentProgress);
           if (score === null || dragging) return;
           dragMultiplier = clamp(score / MOTION_REF, MOTION_DRAG_MIN, MOTION_DRAG_MAX);
           // Visible para depuración / inspección
